@@ -1,7 +1,7 @@
 import requests, time
 
 # === 설정 부분 ===
-URL = "https://ko.aliexpress.com/item/1005010120015183.html"  # 감시할 상품 URL
+URL = "https://www.aliexpress.com/item/1005010120015183.html"  # 감시할 상품 URL
 CHECK_INTERVAL = 600  # 10분마다 확인 (초 단위)
 BOT_TOKEN = "8575667908:AAHxAxwEPBx30IWldmPc_EF9hEQLxp_H1o4"  # 텔레그램 봇 토큰
 CHAT_ID = "6646276816"  # 내 텔레그램 ID
