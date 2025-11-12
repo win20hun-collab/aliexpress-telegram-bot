@@ -2,7 +2,7 @@ import requests, time
 from bs4 import BeautifulSoup
 
 # ================= 설정 =================
-URL = "https://www.aliexpress.com/item/1005010120015183.html"  # 영어 페이지 권장
+URL = "https://a.aliexpress.com/_c2QihnfL"  # 영어 페이지 권장
 CHECK_INTERVAL = 600  # 10분마다 확인
 BOT_TOKEN = "8575667908:AAHxAxwEPBx30IWldmPc_EF9hEQLxp_H1o4"
 CHAT_ID = "6646276816"
