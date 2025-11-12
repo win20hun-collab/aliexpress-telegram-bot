@@ -20,7 +20,6 @@ while True:
         if check_stock():
             send_telegram(f"✅ 알리 상품 재입고!\n{URL}")
             print("재고 발견! 텔레그램 발송 완료 ✅")
-            break
         else:
             print("아직 품절 상태... 다시 확인 중")
     except Exception as e:
