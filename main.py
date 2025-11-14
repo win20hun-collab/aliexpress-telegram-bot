@@ -7,10 +7,9 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
 # --- 크롤링 대상 URL 설정 ---
-TARGET_URL = "https://www.aliexpress.us/item/3256809933700431.html"
+TARGET_URL = "https://ko.aliexpress.com/item/1005010120015183.html" # 이 URL은 당신의 실제 URL로 변경해야 할 수 있습니다.
 
 # --- 재고 상태 지속성 (봇이 꺼지지 않는 한 알림 중복 방지) ---
-# 초기 상태를 '품절'로 설정하여 재고가 들어오는 순간만 알림이 오게 합니다.
 LAST_STOCK_STATUS = "OUT_OF_STOCK" 
 
 app = Flask(__name__)
@@ -48,20 +47,21 @@ def check_aliexpress_stock():
         response.raise_for_status() 
         html_content = response.text
         
-        # --- 재고 확인 로직 (수정된 부분) ---
-        # 알리익스프레스 HTML 소스에서 품절 상태를 나타내는 가장 확실한 키워드입니다.
-        OUT_OF_STOCK_INDICATOR = "PAGE_NOT_FOUND_NOTICE" 
+        # --- 재고 확인 로직 (긍정적 지표로 수정) ---
+        # 재고가 있을 때만 페이지 소스에 존재하는 제품의 고유한 이름으로 판단합니다.
+        # 품절일 때는 이 부분이 없거나, 페이지 자체가 다르게 로드됩니다.
+        # 당신이 보내준 HTML 소스에서 확인된 제품명 일부를 사용합니다.
+        IN_STOCK_INDICATOR = "레노버 리전 Y700" 
         
-        if OUT_OF_STOCK_INDICATOR in html_content:
-            current_status = "OUT_OF_STOCK"
-            print(f"❌ {current_status}: 아직 품절 상태입니다.")
-        else:
-            # 품절 키워드가 없으면 재고가 들어온 것으로 간주
+        if IN_STOCK_INDICATOR in html_content:
             current_status = "IN_STOCK"
-            print(f"✅ {current_status}: 재고가 들어왔다고 감지되었습니다!")
+            print(f"✅ {current_status}: 긍정적 지표 ('{IN_STOCK_INDICATOR}')가 감지되었습니다.")
+        else:
+            # 긍정적 지표가 없으면 품절이나 페이지 오류로 간주
+            current_status = "OUT_OF_STOCK"
+            print(f"❌ {current_status}: 긍정적 지표를 찾지 못했습니다. 품절 상태입니다.")
 
         # --- 알림을 보낼지 결정 (상태 변화 감지) ---
-        # 현재 재고가 들어왔고, 이전 상태가 품절이었을 때만 알림을 보냅니다.
         if current_status == "IN_STOCK" and LAST_STOCK_STATUS == "OUT_OF_STOCK":
             message = (
                 "🎉🎉 재고 알림! 🎉🎉\n"
@@ -69,10 +69,8 @@ def check_aliexpress_stock():
                 f"바로 확인하세요: {TARGET_URL}"
             )
             send_telegram_message(message)
-            # 알림을 보낸 후 상태를 '재고 있음'으로 변경하여 중복 알림을 막습니다.
             LAST_STOCK_STATUS = "IN_STOCK"
         elif current_status == "OUT_OF_STOCK" and LAST_STOCK_STATUS == "IN_STOCK":
-            # 다시 품절되면 상태를 '품절'로 돌려놓아 다음에 재고가 들어올 때 알림을 보낼 수 있게 합니다.
             LAST_STOCK_STATUS = "OUT_OF_STOCK"
 
     except requests.exceptions.RequestException as e:
@@ -82,10 +80,6 @@ def check_aliexpress_stock():
 @app.route("/")
 def main_endpoint():
     print("-" * 30)
-    print("5분마다 핑 요청을 받았습니다. 재고 확인 시작.")
+    print("재고 확인 시작.")
     check_aliexpress_stock()
-    
-    # 핑 요청에 응답하여 봇이 깨어있음을 알리고 '로딩'을 방지합니다.
     return "AliExpress Stock Checker is alive.", 200
-
-# Gunicorn이 이 Flask 앱을 Render 환경에서 실행합니다.
